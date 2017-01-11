@@ -3,3 +3,4 @@
 # 2017-album-multisensoriel
 # 2017-tableau-interactif
 # 2017-queen-elisabeth
+# 2017-objets-interactifs
