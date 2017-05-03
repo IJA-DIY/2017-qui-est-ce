@@ -66,7 +66,23 @@ def selection():
     return select_j1,select_j2
     
     
-    
+def condi_victoire_j1(j1):#prend la liste des cartes en argu <a>
+    j = 0
+    for i in j1:
+        if i.em = False:
+            j =+1
+    if j == 1: #si il ne reste qu'une carte dans le jeu du j1 -> il gagne car il a decouvert la carte du j2
+        gagne = True
+        return gagne
+        
+def condi_victoire_j2(j2):#idem </a>
+    j = 0
+    for i in j2:
+        if i.em = False:
+            j =+1
+    if j == 1: #si il ne reste qu'une carte dans le jeu du j2 -> il gagne car il a decouvert la carte du j1
+        gagne = True
+        return gagne
     
     
 ###Main Game
@@ -76,9 +92,10 @@ select_j1, select_j2 = selection()
 gagne = False
 tour_j1 = True
 delete = False
+j = 0
 ###MG Main
 while(not gagne):
-    #tour j1
+    #tour j1 #faudra juste écrire le tour du j1 et c/c pour le j2 en modifiant
     while(tour_j1): ##comment gere t on le passage de tour
         if(delete): ## delete -> bouton pour supr les cartes
             dele = lecture()
@@ -95,6 +112,13 @@ while(not gagne):
                     print(i)
                     carte[i].play() #carte_i correspond au nom de la carte dans sons.py
             time.sleep(1)
+    #condition de victoire
+    if(not condi_victoire_j1(j1):
+        while(tour_j2):
+            ###c/c le tour du j1 quand il marche
+    else:
+        print("j1 gagne")
+        #jouer le son ici
             
             
         
