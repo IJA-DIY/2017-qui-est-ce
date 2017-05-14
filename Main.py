@@ -1,4 +1,5 @@
 #Author : Tanguy PELADO
+#Help : Daniel Sanchez, Alois Lacassagne
 
 
 ##ToDo List
@@ -10,32 +11,32 @@
 
 
 ##Import 
-
-import os #pour reset le programme
+import os
 import time #pratique pour les delais entre les lectures
-import simpleaudio #pour lire les fichier *.wav
+#import simpleaudio #pour lire les fichier *.wav
 import RPi.GPIO as GPIO #permet l'interaction avec les Pins sur la carte
 import MFRC522 #biblio pour les lecteurs NFCs
-from sons import * #ici on importe les sons 
+#from sons import * #ici on importe les sons 
 
 ##Declaration des variables
 etat = False # defini le mode lecture ou delete (mode lecture par defaut)
 gagne = False #defini si le jeu est gagne ou pas (faux par defaut)
-tour_j1 = True # fonctionne en paire avec tour_j2, est utilisé pour changer de personne
+tour_j1 = True # fonctionne en paire avec tour_j2, est utilise pour changer de personne
 tour_j2 = False
 #j = 0 # je sais pas a quoi celui ci sert, si ca plante c'est que c'etait utile
 
 ##GPIO Config
 GPIO.setmode(GPIO.BOARD) #mode BCM non dispo a cause de MFRC
-GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_UP) #declaration du bouton de tour    
-GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)#declaration du bouton changement de mode (lecture // delete)
-GPIO.setup(37, GPIO.IN, pull_up_down=GPIO.PUD_UP) #declaration du bouton de reset
-#insérer ici le bouton reset
+GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #declaration du bouton de tour    
+GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)#declaration du bouton
+GPIO.setup(37, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #declaration du bouton de reset changement de mode (lecture // delete)
+#inserer ici le bouton reset
 GPIO.setup(40, GPIO.OUT)
 GPIO.output(40,GPIO.LOW)
 
 
 def lecture(): #lit une carte NFC et renvoie son UID si disponible, sinon renvoie None
+    print("lecture")
     MIFAREReader = MFRC522.MFRC522()
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
     if status == MIFAREReader.MI_OK:
@@ -54,7 +55,7 @@ class carte: # la classe carte, la base du jeu
 
 #12 cartes pour chaque joueurs dans 2 liste respectives  j1 et j2
 def initialisation():#initialise la liste de carte et revoie le nombre de carte par joeur ainsi que les listes de cartes
-    noms = ["Benoit","Jean-Luc","Manuel","Francois","Donald","Jacques","Marine","Nathalie","Segolene","Martine","Bernadette","Elisabeth"] #noms des cartes, en supposant que les 2 joueurs on les memes noms de cartes
+    noms = ["Delphine","Anna","Joseline","Alice","Vero","Cathy","Olivier","jacques","Mathieu","Daniel","Enrique","Henri"] #noms des cartes, en supposant que les 2 joueurs on les memes noms de cartes
     uids_j1 = [[136,4,123,218],[136,4,123,211],[136,4,122,208],[136,4,122,98],[136,4,122,104
 ],[136,4,122,110],[136,4,122,117],[136,4,122,124],[136,4,125,254],[136,4,125,1],[136,4,126,6],[136,4,124,4]] #liste des uids pour les cartes du j1
     uids_j2 = [[136,4,123,254],[136,4,123,215],[136,4,122,204],[136,4,122,101],[136,4,122,107],[136,4,122,113],[136,4,122,120],[136,4,122,127],[136,4,124,251],[136,4,126,3],[136,4,124,8],[136,4,124,0]] #liste des uids pour les cartes du j2
@@ -122,20 +123,20 @@ def relais(channel): #controle le relais pour changer entre le mode lecture et m
         print("mode delete")#pour le debug
     etat = not etat
     
-def reset(channel():#fonction reliee au bouton reset
-    os.execl("Main.py") # A TESTER
-    
 def tour(channel): # est utilise pour changer de tour
     global tour_j1
     global tour_j2
     tour_j1 = not tour_j1
     tour_j2 = not tour_j2
         
+def reset(channel):#fonction reliee au bouton reset
+    os.execl("Main.py","None") # A TESTER
+    
 ##GPIO interupt
 #ajoute les interuptions de changement de mode et de fin de tour
 GPIO.add_event_detect(12, GPIO.RISING, callback=tour, bouncetime=300)  
-GPIO.add_event_detect(11, GPIO.FALLING, callback=relais, bouncetime=300) 
-GPIO.add_event_detect(37, GPIO.FALLING, callback=reset, bouncetime=300) 
+GPIO.add_event_detect(11, GPIO.RISING, callback=relais, bouncetime=300) 
+GPIO.add_event_detect(37, GPIO.RISING, callback=reset, bouncetime=300) 
 #ajouter le bouton de reset ici aussi
     
 ##Main Game
@@ -146,6 +147,8 @@ select_j1, select_j2 = selection() # selection des cartes a faire deviner
 ##MG Main
 #sachant que le tour du j2 est exactement le meme que celui du j1, le tour du j2
 while(not gagne): # tant que le jeu n'est pas fini
+    if(etat):#si jamais on etait en mode delete, on repasse en mode lecture
+        relais(12)
     print("tour j1")#pour le debug
     while(tour_j1 and not condi_victoire_j2(j2)): #tant que je tour n'est pas fini. on regarde aussi si le j2 n'a pas gagne
         if(etat): ## mode delete -> bouton pour supr les cartes
@@ -162,6 +165,8 @@ while(not gagne): # tant que le jeu n'est pas fini
                             print("delete")#pour le debug
                             print(j1[i].nom)#pour le debug
                         time.sleep(2)# on pause 2 secondes afin de ne pas supprimer et remettre la meme carte 1545 fois en une lecture
+            else:
+                time.sleep(0.5)
         else: #mode lecture : on lit la carte et on joue son nom
             lect = lecture()
             if(lect != None):
@@ -170,6 +175,8 @@ while(not gagne): # tant que le jeu n'est pas fini
                         print("lecture")
                         print(j1[i].nom)
                         time.sleep(1)#pour eviter de lire 556684 fois la meme carte
+            else:
+                time.sleep(0.5)
     #condition de victoire
     print("tour j2")#pour le debug
     if(etat):#si jamais on etait en mode delete, on repasse en mode lecture
@@ -190,6 +197,8 @@ while(not gagne): # tant que le jeu n'est pas fini
                                 print("delete")#pour le debug
                                 print(j2[i].nom)#pour le debug
                             time.sleep(2)
+                else:
+                    time.sleep(0.5)
             else: #mode lecture
                 lect = lecture()
                 if(lect != None):
@@ -198,6 +207,8 @@ while(not gagne): # tant que le jeu n'est pas fini
                             print("lecture")#pour le debug
                             print(j2[i].nom)#pour le debug
                             time.sleep(1)
+                else:
+                    time.sleep(0.5)
         if(condi_victoire_j2(j2)):
             print("j2 gagne")#pour le debug
         
