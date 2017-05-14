@@ -27,7 +27,7 @@ tour_j2 = False
 
 ##GPIO Config
 GPIO.setmode(GPIO.BOARD) #mode BCM non dispo a cause de MFRC
-GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_UP) #declaration du bouton de tour    
+GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #declaration du bouton de tour    
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)#declaration du bouton changement de mode (lecture // delete)
 #inserer ici le bouton reset
 GPIO.setup(40, GPIO.OUT)
@@ -35,6 +35,7 @@ GPIO.output(40,GPIO.LOW)
 
 
 def lecture(): #lit une carte NFC et renvoie son UID si disponible, sinon renvoie None
+    print("lecture")
     MIFAREReader = MFRC522.MFRC522()
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
     if status == MIFAREReader.MI_OK:
@@ -53,7 +54,7 @@ class carte: # la classe carte, la base du jeu
 
 #12 cartes pour chaque joueurs dans 2 liste respectives  j1 et j2
 def initialisation():#initialise la liste de carte et revoie le nombre de carte par joeur ainsi que les listes de cartes
-    noms = ["Delphine","Anna","Joseline","Alice","Véro","Cathy","Olivier","jacques","Mathieu","Daniel","Enrique","Henri"] #noms des cartes, en supposant que les 2 joueurs on les memes noms de cartes
+    noms = ["Delphine","Anna","Joseline","Alice","Vero","Cathy","Olivier","jacques","Mathieu","Daniel","Enrique","Henri"] #noms des cartes, en supposant que les 2 joueurs on les memes noms de cartes
     uids_j1 = [[136,4,123,218],[136,4,123,211],[136,4,122,208],[136,4,122,98],[136,4,122,104
 ],[136,4,122,110],[136,4,122,117],[136,4,122,124],[136,4,125,254],[136,4,125,1],[136,4,126,6],[136,4,124,4]] #liste des uids pour les cartes du j1
     uids_j2 = [[136,4,123,254],[136,4,123,215],[136,4,122,204],[136,4,122,101],[136,4,122,107],[136,4,122,113],[136,4,122,120],[136,4,122,127],[136,4,124,251],[136,4,126,3],[136,4,124,8],[136,4,124,0]] #liste des uids pour les cartes du j2
@@ -130,7 +131,7 @@ def tour(channel): # est utilise pour changer de tour
 ##GPIO interupt
 #ajoute les interuptions de changement de mode et de fin de tour
 GPIO.add_event_detect(12, GPIO.RISING, callback=tour, bouncetime=300)  
-GPIO.add_event_detect(11, GPIO.FALLING, callback=relais, bouncetime=300) 
+GPIO.add_event_detect(11, GPIO.RISING, callback=relais, bouncetime=300) 
 #ajouter le bouton de reset ici aussi
     
 ##Main Game
