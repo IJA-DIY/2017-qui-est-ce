@@ -18,6 +18,9 @@ import RPi.GPIO as GPIO #permet l'interaction avec les Pins sur la carte
 import MFRC522 #biblio pour les lecteurs NFCs
 from sons import * #ici on importe les sons 
 
+
+#Help : Daniel Sanchez, Alois Lacassagne
+
 ##Declaration des variables
 etat = False # defini le mode lecture ou delete (mode lecture par defaut)
 gagne = False #defini si le jeu est gagne ou pas (faux par defaut)
@@ -25,11 +28,13 @@ tour_j1 = True # fonctionne en paire avec tour_j2, est utilise pour changer de p
 tour_j2 = False
 #j = 0 # je sais pas a quoi celui ci sert, si ca plante c'est que c'etait utile
 reset_var = False #pour la confirmation du reset
+
 ##GPIO Config
 GPIO.setmode(GPIO.BOARD) #mode BCM non dispo a cause de MFRC
 GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #declaration du bouton de tour    
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)#declaration du bouton changement de mode (lecture // delete)
 GPIO.setup(37, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #declaration du bouton de reset
+
 GPIO.setup(40, GPIO.OUT)
 GPIO.output(40,GPIO.LOW)
 
@@ -56,6 +61,8 @@ class carte: # la classe carte, la base du jeu
 def initialisation():#initialise la liste de carte et revoie le nombre de carte par joeur ainsi que les listes de cartes
     noms_j1 = [delphine_j1,anna_j1,joseline_j1,alice_j1,vero_j1,cathy_j1,olivier_j1,jacques_j1,mathieu_j1,greg_j1,enrique_j1,henri_j1]
     noms_j2 = [delphine_j2,anna_j2,joseline_j2,alice_j2,vero_j2,cathy_j2,olivier_j2,jacques_j2,mathieu_j2,greg_j2,enrique_j2,henri_j2] #noms des cartes, en supposant que les 2 joueurs on les memes noms de cartes
+
+    
     uids_j1 = [[136,4,123,218],[136,4,123,211],[136,4,122,208],[136,4,122,98],[136,4,122,104
 ],[136,4,122,110],[136,4,122,117],[136,4,122,124],[136,4,125,254],[136,4,125,1],[136,4,126,6],[136,4,124,4]] #liste des uids pour les cartes du j1
     uids_j2 = [[136,4,123,254],[136,4,123,215],[136,4,122,204],[136,4,122,101],[136,4,122,107],[136,4,122,113],[136,4,122,120],[136,4,122,127],[136,4,124,251],[136,4,126,3],[136,4,124,8],[136,4,124,0]] #liste des uids pour les cartes du j2
@@ -65,12 +72,14 @@ def initialisation():#initialise la liste de carte et revoie le nombre de carte 
         j2.append(carte(noms_j2[i],uids_j2[i],False))
     return len(noms_j1),j1,j2
 
+
 ## Selection de la carte a faire deviner
     
 def selection():#j1 puis j2, ne valide que si les 2 cartes existent
     reussi = False
     player = selec_j1.play()
     player.wait_done()
+
     while(not reussi):#tant que la selection pour le j1 n'est pas valide
         select = lecture()
         if(select != None):# si la carte scannee possede un uid, on regarde si elle est dans notre jeu de carte
@@ -88,6 +97,8 @@ def selection():#j1 puis j2, ne valide que si les 2 cartes existent
     print("j1 ok")#pour le debug
     player = selec_j2.play()
     player.wait_done()
+    reussi = False
+    print("j1 ok")#pour le debug
     while(not reussi):#tant que la selection pour le j2 n'est pas valide
         select = lecture()        
         if(select != None):
@@ -102,8 +113,7 @@ def selection():#j1 puis j2, ne valide que si les 2 cartes existent
     player.wait_done()
     time.sleep(1)
     return select_j1,select_j2
-    
-    
+
 def condi_victoire_j1(j1):#prend la liste des cartes en argument et revoie True si il ne reste que la carte du j2 dans le jeu du j1
     global gagne
     j = 0
@@ -163,7 +173,7 @@ def reset(channel):#fonction reliee au bouton reset
         player.wait_done()
         reset_var = True
         return None
-    
+
 def tour(channel): # est utilise pour changer de tour
     global tour_j1
     global tour_j2
@@ -175,6 +185,7 @@ def tour(channel): # est utilise pour changer de tour
 GPIO.add_event_detect(12, GPIO.RISING, callback=tour, bouncetime=1000)  
 GPIO.add_event_detect(11, GPIO.RISING, callback=relais, bouncetime=5000) 
 GPIO.add_event_detect(37, GPIO.RISING, callback=reset, bouncetime=5000) 
+
 #ajouter le bouton de reset ici aussi
     
 ##Main Game
@@ -188,6 +199,9 @@ while(not gagne): # tant que le jeu n'est pas fini
     print("tour j1")#pour le debug
     player = tour_j1_son.play()
     player.wait_done()
+    if(etat):#si jamais on etait en mode delete, on repasse en mode lecture
+        relais(12)
+    print("tour j1")#pour le debug
     while(tour_j1 and not condi_victoire_j2(j2)): #tant que je tour n'est pas fini. on regarde aussi si le j2 n'a pas gagne
         if(etat): ## mode delete -> bouton pour supr les cartes
             dele = lecture()
@@ -207,6 +221,7 @@ while(not gagne): # tant que le jeu n'est pas fini
                             j1[i].em = True                               
                             print("delete")#pour le debug
                             print(j1[i].nom)#pour le debug
+
                             player = suprr_de_j1.play()
                             player.wait_done()
                             tempo =  j1[i].nom
